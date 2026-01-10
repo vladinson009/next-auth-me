@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -123,6 +124,14 @@ export default function RegisterPage() {
               </form>
             </Form>
           </CardContent>
+          <CardFooter className="flex-col gap-2">
+            <div className="text-muted-foreground text-sm">
+              <span>Already have an account? </span>
+              <Link href="/login" className="underline">
+                Login
+              </Link>
+            </div>
+          </CardFooter>
         </Card>
       )}
     </main>

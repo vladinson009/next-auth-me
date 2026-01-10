@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -22,6 +23,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import z from 'zod';
 import { LoginWithCredentials } from './actions';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const formSchema = z.object({
   email: z.email(),
@@ -29,6 +32,7 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,10 +42,18 @@ export default function LoginPage() {
   });
 
   async function handleSubmit(data: z.infer<typeof formSchema>) {
-    await LoginWithCredentials({
+    const response = await LoginWithCredentials({
       email: data.email,
       password: data.password,
     });
+
+    if (response?.error) {
+      form.setError('root', {
+        message: response.message,
+      });
+    } else {
+      router.push('/my-account');
+    }
   }
 
   return (
@@ -84,12 +96,28 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-
+                {!!form.formState.errors.root?.message && (
+                  <FormMessage>{form.formState.errors.root.message}</FormMessage>
+                )}
                 <Button type="submit">Login</Button>
               </fieldset>
             </form>
           </Form>
         </CardContent>
+        <CardFooter className="flex-col gap-2">
+          <div className="text-muted-foreground text-sm">
+            <span>Don&apos;t have an account? </span>
+            <Link href="/register" className="underline">
+              Register
+            </Link>
+          </div>
+          <div className="text-muted-foreground text-sm">
+            <span>Forgot password? </span>
+            <Link href="/password-reset" className="underline">
+              Reset my password
+            </Link>
+          </div>
+        </CardFooter>
       </Card>
     </main>
   );

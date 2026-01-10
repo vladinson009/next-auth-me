@@ -30,5 +30,10 @@ export async function LoginWithCredentials({ email, password }: Props) {
       password,
       redirect: false,
     });
-  } catch (error) {}
+  } catch (error) {
+    return {
+      error: true,
+      message: 'Incorrect email or password',
+    };
+  }
 }
