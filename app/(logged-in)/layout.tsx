@@ -1,8 +1,15 @@
 import Link from 'next/link';
 import { PropsWithChildren } from 'react';
 import LogoutButton from './logout-button';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
 
-export default function LoggedInLayout({ children }: PropsWithChildren) {
+export default async function LoggedInLayout({ children }: PropsWithChildren) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    redirect('/login');
+  }
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-gray-200 flex justify-between p-4 items-center">
