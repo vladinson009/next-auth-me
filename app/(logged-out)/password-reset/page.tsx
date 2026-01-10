@@ -18,51 +18,38 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { passwordSchema } from '@/validations/passwordSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useWatch } from 'react-hook-form';
-import z from 'zod';
-import { LoginWithCredentials } from './actions';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import z from 'zod';
+import { passwordReset } from './actions';
 
 const formSchema = z.object({
   email: z.email(),
-  password: passwordSchema,
 });
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function PasswordReset() {
+  const searchParams = useSearchParams();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: decodeURIComponent(searchParams.get('email') ?? ''),
     },
   });
-  const email = useWatch({ control: form.control, name: 'email' });
 
   async function handleSubmit(data: z.infer<typeof formSchema>) {
-    const response = await LoginWithCredentials({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (response?.error) {
-      form.setError('root', {
-        message: response.message,
-      });
-    } else {
-      router.push('/my-account');
-    }
+    await passwordReset(data.email);
   }
 
   return (
     <main className="flex justify-center items-center min-h-screen">
       <Card className="w-87.5">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Login to your account.</CardDescription>
+          <CardTitle>Password Reset</CardTitle>
+          <CardDescription>
+            Enter your email address to reset your password
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -84,43 +71,26 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="password" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 {!!form.formState.errors.root?.message && (
                   <FormMessage>{form.formState.errors.root.message}</FormMessage>
                 )}
-                <Button type="submit">Login</Button>
+                <Button type="submit">Submit</Button>
               </fieldset>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <div className="text-muted-foreground text-sm">
+        <CardFooter className="flex-col gap-2 text-sm text-muted-foreground">
+          <div>
+            <span>Remember your password? </span>
+            <Link href="/login" className="underline">
+              Login
+            </Link>
+          </div>
+          <div>
             <span>Don&apos;t have an account? </span>
             <Link href="/register" className="underline">
               Register
-            </Link>
-          </div>
-          <div className="text-muted-foreground text-sm">
-            <span>Forgot password? </span>
-            <Link
-              href={`/password-reset${
-                email ? `?email=${encodeURIComponent(email)}` : ''
-              }`}
-              className="underline"
-            >
-              Reset my password
             </Link>
           </div>
         </CardFooter>
