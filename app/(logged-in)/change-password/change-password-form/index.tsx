@@ -15,6 +15,8 @@ import { passwordSchema } from '@/validations/passwordSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import z from 'zod';
+import { changePassword } from './actions';
+import { toast } from 'sonner';
 
 const formSchema = z
   .object({
@@ -32,7 +34,24 @@ export default function ChangePasswordForm() {
     },
   });
 
-  async function handleSubmit(data: z.infer<typeof formSchema>) {}
+  async function handleSubmit(data: z.infer<typeof formSchema>) {
+    const response = await changePassword({
+      currentPassword: data.currentPassword,
+      password: data.password,
+      passwordConfirm: data.passwordConfirm,
+    });
+    if (response?.error) {
+      form.setError('root', {
+        message: response.message,
+      });
+    } else {
+      form.reset();
+      toast.success('Password changed', {
+        description: 'Your password has been updated',
+        className: 'bg-green-500 text-white',
+      });
+    }
+  }
 
   return (
     <Form {...form}>
@@ -80,6 +99,9 @@ export default function ChangePasswordForm() {
               </FormItem>
             )}
           />
+          {!!form.formState.errors.root?.message && (
+            <FormMessage>{form.formState.errors.root.message}</FormMessage>
+          )}
           <Button type="submit">Change Password</Button>
         </fieldset>
       </form>
