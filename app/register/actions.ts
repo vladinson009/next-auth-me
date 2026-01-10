@@ -1,5 +1,6 @@
 'use server';
 
+import db from '@/db/drizzle';
 import { passwordMatchSchema } from '@/validations/passwordMatchSchema';
 import z from 'zod';
 
@@ -10,6 +11,8 @@ type Props = {
 };
 
 export async function registerUser({ email, password, passwordConfirm }: Props) {
+  // const result = await db.select()
+
   const newUserSchema = z
     .object({
       email: z.email(),
