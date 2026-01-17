@@ -4,7 +4,7 @@ import { auth } from '@/auth';
 import db from '@/db/drizzle';
 import { users } from '@/db/usersSchema';
 import { eq } from 'drizzle-orm';
-import { generateSecret, generateURI } from 'otplib';
+import { generateSecret, generateURI, verify } from 'otplib';
 export async function get2faSecret() {
   const session = await auth();
 
@@ -48,6 +48,68 @@ export async function get2faSecret() {
   return {
     twoFactorSecret: generatedURI,
   };
+}
+
+export async function activate2fa(token: string) {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      error: true,
+      message: 'Unauthorized',
+    };
+  }
+
+  const [user] = await db
+    .select({
+      twoFactorSecret: users.twoFactorSecret,
+    })
+    .from(users)
+    .where(eq(users.id, parseInt(session.user.id)));
+
+  if (!user) {
+    return {
+      error: true,
+      message: 'User not found',
+    };
+  }
+
+  if (user.twoFactorSecret) {
+    const tokenValid = await verify({
+      token: token,
+      secret: user.twoFactorSecret,
+    });
+
+    if (!tokenValid.valid) {
+      return {
+        error: true,
+        message: 'Invalid OTP',
+      };
+    }
+    await db
+      .update(users)
+      .set({
+        twoFactorActivated: true,
+      })
+      .where(eq(users.id, parseInt(session.user.id)));
+  }
+}
+
+export async function disable2fa() {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return {
+      error: true,
+      message: 'Unauthorized',
+    };
+  }
+  await db
+    .update(users)
+    .set({
+      twoFactorActivated: false,
+    })
+    .where(eq(users.id, parseInt(session.user.id)));
 }
 
 /**
